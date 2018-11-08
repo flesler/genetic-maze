@@ -40,17 +40,42 @@
 	const POPULATION = 100
 
 	const AI_OPTIONS = {
-		population: POPULATION,
-		elitism: 0.1,
-		randomBehaviour: 0.2,
+		log: 0,
+		popsize: POPULATION,
 		mutationRate: 0.3,
-		mutationRange: 0.99,
-		nbChild: 4,
-		network: [INPUTS, [], OUTPUTS]
+		mutationAmount: 3,
+		equal: false,
+		// mutation: neataptic.methods.mutation.ALL,
+		selection: neataptic.methods.selection.TOURNAMENT,
+		network: createTemplate()
 	}
 
-	const ai = new Neuroevolution(AI_OPTIONS)
-	let generation = 0
+	AI_OPTIONS.elitism = Math.round(0.1 * POPULATION)
+	AI_OPTIONS.provenance = Math.round(0.2 * POPULATION)
+
+	function createTemplate() {
+		const nodes = []
+		for (let o = 0; o < OUTPUTS; o++) {
+			const out = new neataptic.Node()
+			for (let i = 0; i < INPUTS_PER_OUTPUT; i++) {
+				const inp = new neataptic.Node()
+				inp.connect(out, 1)
+				nodes.push(inp)
+			}
+			nodes.push(out)
+		}
+		// Construct a network
+		return neataptic.architect.Construct(nodes)
+	}
+
+	const ai = new neataptic.Neat(INPUTS, OUTPUTS, null, AI_OPTIONS)
+
+	// Randomize the weights the first time
+	ai.population.forEach(function(net) {
+		net.connections.forEach(function(conn) {
+			conn.weight = Math.random()
+		})
+	})
 
 	//---------------------- UI Grid -----------------------------//
 
@@ -166,6 +191,10 @@
 	}
 
 	class Adventurer {
+		static complexity(brain) {
+			return brain.nodes.concat(brain.connections, brain.gates).length
+		}
+
 		constructor(id, bg) {
 			this.dom = document.createElement('span')
 			this.id = this.dom.id = id
@@ -174,7 +203,8 @@
 
 		setBrain(brain) {
 			this.brain = brain
-			this.score = 0
+			brain.id = this.id
+			this.score = brain.score = 0
 			this.health = 100
 			this.visited = {}
 			this.minDistanceToExit = Infinity
@@ -185,9 +215,8 @@
 			this.update()
 		}
 
-		setBest(data) {
+		setBest() {
 			this.best = true
-			this.brain.setSave(data)
 			this.update()
 		}
 
@@ -231,13 +260,15 @@
 		addScore(delta) {
 			if (delta) {
 				this.score += delta
+				this.brain.score = this.score
 			}
 		}
 
 		finish() {
 			this.active = false
 			this.addScore(this.minDistanceToExit * scores.MIN_DISTANCE_TO_EXIT)
-			ai.networkScore(this.brain, this.score)
+			// Incentivize simpler genomes
+			this.addScore(Adventurer.complexity(this.brain) * scores.COMPLEXITY)
 			this.update()
 		}
 
@@ -297,14 +328,14 @@
 			const canWalkTo = isWalkable(tile)
 			const closerToExit = canWalkTo && distance(tile, exit) < dist
 			const visited = !canWalkTo || adv.hasVisited(tile)
-			inputs.push(canWalkTo ? 0 : -1)
+			inputs.push(canWalkTo ? 1 : -1)
 			inputs.push(visited ? -1 : 1)
 			inputs.push(closerToExit ? 1 : -1)
 		}
 		if (inputs.length !== INPUTS) {
 			throw new Error('Mismatched inputs')
 		}
-		const outputs = adv.brain.compute(inputs)
+		const outputs = adv.brain.activate(inputs)
 		if (outputs.length !== OUTPUTS) {
 			throw new Error('Mismatched outputs')
 		}
@@ -360,20 +391,22 @@
 	let best
 
 	function startGame() {
-		ai.nextGeneration().forEach(function(brain, i) {
+		for (let i = 0; i < POPULATION; i++) {
 			const adv = adventurers[i]
-			adv.setBrain(brain)
-			// Always ensure the all-time best is in
 			if (best && best.id === adv.id) {
-				adv.setBest(best)
+				// Always keep the all-time better in the next simulation
+				const net = neataptic.Network.fromJSON(best)
+				ai.population[i] = net
+				adv.setBrain(net)
+				adv.setBest()
+			} else {
+				adv.setBrain(ai.population[i])
 			}
-		})
+		}
 
-		generation++
 		turn = 0
-
 		if (pauseAfter) {
-			setStatus('Running generation #' + generation)
+			setStatus('Running generation #' + ai.generation)
 		}
 		tick()
 	}
@@ -404,24 +437,25 @@
 
 	function endGame() {
 		clearTimeout(timeoutId)
-		adventurers.sort(function(a, b) { return b.score - a.score })
+		ai.sort()
 
-		const average = adventurers.reduce(function(accum, adv) { return accum + adv.score }, 0) / adventurers.length
-		const fittest = adventurers[0]
-
+		const average = ai.population.reduce(function(accum, brain) { return accum + brain.score }, 0) / POPULATION
+		const fittest = ai.getFittest()
 		if (!best || fittest.score > best.score) {
-			best = fittest.brain.getSave()
+			best = fittest.toJSON()
 			best.score = fittest.score
-			best.generation = generation
+			best.generation = ai.generation
 			best.id = fittest.id
 		}
 
-		setStatus('Generation #' + generation + ' ran ' + turn + ' turns, best: ' + fittest.score + ', average: ' + Math.round(average) + ', highscore: ' + best.score)
+		setStatus('Generation #' + ai.generation + ' ran ' + turn + ' turns, best: ' + fittest.score + ', average: ' + Math.round(average) + ', highscore: ' + best.score)
 
-		turn = 0
-		if (!pauseAfter) {
-			startGame()
-		}
+		ai.evolve().then(function() {
+			turn = 0
+			if (!pauseAfter) {
+				startGame()
+			}
+		})
 	}
 
 	function setStatus(text) {
