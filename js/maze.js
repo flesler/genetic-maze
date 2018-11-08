@@ -42,8 +42,8 @@
 	const AI_OPTIONS = {
 		population: POPULATION,
 		elitism: 0.1,
-		randomBehaviour: 0.1,
-		mutationRate: 0.2,
+		randomBehaviour: 0.2,
+		mutationRate: 0.3,
 		mutationRange: 0.99,
 		nbChild: 4,
 		network: [INPUTS, [], OUTPUTS]
