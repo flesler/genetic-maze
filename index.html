@@ -1,28 +1,33 @@
 <html>
 	<head>
-		<title>Web-based Maze builder and solver with a Neural Network</title>
+		<title>Build a Maze, then let a Genetic Algorithm solve it</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta name="author" content="Ariel Flesler">
-		<meta name="description" content="Web-based Maze builder and solver with a Neural Network">
+		<meta name="description" content="Build a Maze, then let a Genetic Algorithm solve it">
 		<meta name="robots" content="all" />
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 		<link rel="stylesheet" href="css/style.css">
-		<link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
 		<link rel="icon" href="favicon.ico">
 		<meta name="theme-color" content="#ffffff">
 	</head>
 	<body>
-		<h1>Web-based Maze builder and solver with a Neural Network</h1>
-		<button id="reset">Reset</button>
-		<div id="chart"></div>
+		<h1>Build a Maze, then let a Genetic Algorithm solve it</h1>
+		<nav>
+			<button class="float-left">Run</button>
+			<button class="float-left">Pause</button>
+			<button class="float-left">Loop</button>
+			<button class="float-right">Reset</button>
+			<button class="float-right">Import/Export</button>
+		</nav>
+
+		<header>Welcome! Setup the maze by clicking and then click "Run" or "Loop"</header>
+
 		<main>
 			<div id="board" class="container"></div>
 		</main>
 
-		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/neataptic@1.4.7/dist/neataptic.js"></script>
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/frappe-charts/1.1.0/frappe-charts.min.iife.js"></script>
+		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/google-palette@1.1.0/palette.js"></script>
+		<script type="text/javascript" src="js/Neuroevolution.js"></script>
 		<script type="text/javascript" src="js/maze.js"></script>
 	</body>
 </html>

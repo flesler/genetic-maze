@@ -1,6 +1,6 @@
 # genetic-maze
 
-Web-based Maze builder and solver with a Neural Network
+Build a Maze, then let a Genetic Algorithm solve it
 
 ## License
 
