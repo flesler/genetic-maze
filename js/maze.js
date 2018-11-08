@@ -471,6 +471,7 @@
 	}
 
 	document.getElementsByTagName('nav')[0].onclick = function (e) {
+		const curr = localStorage.getItem(STORAGE) || ''
 		switch (e.target.innerHTML) {
 			case 'Run':
 				ensureEnd()
@@ -488,12 +489,16 @@
 				startGame()
 				break
 			case 'Import/Export':
-				const curr = localStorage.getItem(STORAGE) || ''
 				const seed = prompt('Copy this seed or paste one here', curr)
 				if (seed && seed !== curr) {
 					localStorage.setItem(STORAGE, seed)
 					location.reload()
 				}
+				break
+			case 'Randomize':
+				const rand = curr.split('').sort(function() { return Math.random() - 0.5 }).join('')
+				localStorage.setItem(STORAGE, rand)
+				location.reload()
 				break
 			case 'Reset':
 				localStorage.removeItem(STORAGE)
