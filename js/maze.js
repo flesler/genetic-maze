@@ -37,13 +37,13 @@
 	const INPUTS_PER_OUTPUT = 3
 	const INPUTS = OUTPUTS * INPUTS_PER_OUTPUT
 
-	const POPULATION = 100
+	const POPULATION = 20
 
 	const AI_OPTIONS = {
 		log: 0,
 		popsize: POPULATION,
-		mutationRate: 0.3,
-		mutationAmount: 3,
+		mutationRate: 0.5,
+		mutationAmount: 1,
 		equal: false,
 		// mutation: neataptic.methods.mutation.ALL,
 		selection: neataptic.methods.selection.TOURNAMENT,
@@ -59,7 +59,7 @@
 			const out = new neataptic.Node()
 			for (let i = 0; i < INPUTS_PER_OUTPUT; i++) {
 				const inp = new neataptic.Node()
-				inp.connect(out, 1)
+				inp.connect(out, Math.random())
 				nodes.push(inp)
 			}
 			nodes.push(out)
